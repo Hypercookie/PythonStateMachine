@@ -12,7 +12,10 @@ def tuple_matches(t1: tuple, match: tuple) -> bool:
         for i in range(0, len(t1)):
             if str(match[i])[0] == "!" and str(t1[i]) == str(match[i])[1::]:
                 return False
-            if not (str(t1[i]) == str(match[i]) or str(match[i]) == "*") and str(match[i])[0] != "!":
+            if (
+                not (str(t1[i]) == str(match[i]) or str(match[i]) == "*")
+                and str(match[i])[0] != "!"
+            ):
                 return False
 
         return True
@@ -44,7 +47,7 @@ class AbstractStateMachine:
         self.current_state: tuple = self.nodes[0].state_list
 
     def attach_side_effect(
-            self, t1: tuple, t2: tuple, transition_function: Callable[[Node, Node], bool]
+        self, t1: tuple, t2: tuple, transition_function: Callable[[Node, Node], bool]
     ) -> bool:
         if len(t1) != self.num_attr or len(t2) != self.num_attr:
             return False
@@ -55,14 +58,14 @@ class AbstractStateMachine:
             return True
 
     def get_edges_from_wildcard(self, t1: tuple, t2: tuple) -> list[Edge]:
-        q = []
-        for edge in self.edges:
-            if tuple_matches(edge.n1.state_list, t1) and tuple_matches(edge.n2.state_list, t2):
-                q.append(edge)
-        return q  # [i for i in self.edges if tuple_matches(i.n1.state_list, t1) and tuple_matches(i.n2.state_list, t2)]
+        return [
+            i
+            for i in self.edges
+            if tuple_matches(i.n1.state_list, t1) and tuple_matches(i.n2.state_list, t2)
+        ]
 
     def attach_global_side_effect(
-            self, transition_function: Callable[[Node, Node], bool]
+        self, transition_function: Callable[[Node, Node], bool]
     ) -> bool:
         for edge in self.edges:
             edge.transition_functions.append(transition_function)
@@ -76,7 +79,7 @@ class AbstractStateMachine:
 
     def update_states(self, new_state: tuple) -> bool:
         if len(new_state) == self.num_attr and (
-                new_state != self.current_state or self.allow_self_transition
+            new_state != self.current_state or self.allow_self_transition
         ):
             edge: Edge = self.get_edge_by_tuple_pair(self.current_state, new_state)
             r: bool = edge.transition()
