@@ -1,4 +1,4 @@
-from AbstractFiniteStateMachine import AbstractFiniteStateMachine
+from StateMachine import AbstractStateMachine
 from Node import Node
 
 

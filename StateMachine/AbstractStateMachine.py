@@ -5,7 +5,7 @@ from Edge import Edge
 from Node import Node
 
 
-class FiniteStateMachine:
+class AbstractStateMachine:
     def __init__(self, num_attr: int, allow_self_transition=False):
         self.num_attr: int = num_attr
         self.nodes: list[Node] = []
