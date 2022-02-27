@@ -1,6 +1,12 @@
 import re
 from typing import Dict, Tuple, Any, Callable, List, Generator, overload, Coroutine
 
+linear_side_effect = Callable[[Tuple[Any, ...], Tuple[Any, ...]], bool]
+async_side_effect = Callable[
+    [Tuple[Any, ...], Tuple[Any, ...]], Coroutine[Any, Any, bool]
+]
+edge = Tuple[Tuple[Any, ...], Tuple[Any, ...]]
+
 
 def compare_tuples(t1: Tuple[Any, ...], wild_carded_tuple: Tuple[Any, ...]) -> bool:
     if len(t1) != len(wild_carded_tuple):
@@ -14,41 +20,20 @@ def compare_tuples(t1: Tuple[Any, ...], wild_carded_tuple: Tuple[Any, ...]) -> b
 class EdgeMachine:
     def __init__(self, vertex_size: int, init_state: Tuple[Any, ...] = ()):
         self.vertex_size: int = vertex_size
-        self.linear_side_effects_dict: Dict[
-            Tuple[Tuple[Any, ...], Tuple[Any, ...]],
-            List[Callable[[Tuple[Any, ...], Tuple[Any, ...]], bool]],
-        ] = {}
-        self.async_side_effects_dict: Dict[
-            Tuple[Tuple[Any, ...], Tuple[Any, ...]],
-            List[
-                Callable[
-                    [Tuple[Any, ...], Tuple[Any, ...]],
-                    Coroutine[Tuple[Any, ...], Tuple[Any, ...], bool],
-                ]
-            ],
-        ] = {}
+        self.linear_side_effects_dict: Dict[edge, List[linear_side_effect]] = {}
+        self.async_side_effects_dict: Dict[edge, List[async_side_effect]] = {}
         self.current_state: Tuple[Any, ...] = init_state
-        self.global_effects: List[
-            Callable[[Tuple[Any, ...], Tuple[Any, ...]], bool]
-        ] = []
+        self.global_effects: List[linear_side_effect] = []
+        self.async_global_side_effects: List[async_side_effect] = []
 
-    async def add_global_side_effect(
-        self, side_effect: Callable[[Tuple[Any, ...], Tuple[Any, ...]], bool]
-    ):
+    async def add_global_side_effect(self, side_effect: linear_side_effect):
         self.global_effects.append(side_effect)
 
-    @overload
-    async def add_side_effect(
-        self, n1: Tuple[Any, ...], n2: Tuple[Any, ...], side_effect: Any
-    ) -> bool:
-        return False
+    async def add_global_async_side_effect(self, side_effect: async_side_effect):
+        self.async_global_side_effects.append(side_effect)
 
-    @overload
     async def add_side_effect(
-        self,
-        n1: Tuple[Any, ...],
-        n2: Tuple[Any, ...],
-        side_effect: Callable[[Tuple[Any, ...], Tuple[Any, ...]], bool],
+        self, n1: Tuple[Any, ...], n2: Tuple[Any, ...], side_effect: linear_side_effect
     ) -> bool:
         if not (len(n1) == self.vertex_size and len(n2) == self.vertex_size):
             return False
@@ -57,13 +42,8 @@ class EdgeMachine:
         self.linear_side_effects_dict[(n1, n2)].append(side_effect)
         return True
 
-    async def add_side_effect(
-        self,
-        n1: Tuple[Any, ...],
-        n2: Tuple[Any, ...],
-        side_effect: Callable[
-            [Tuple[Any, ...], Tuple[Any, ...]], Coroutine[Any, Any, bool]
-        ],
+    async def add_async_side_effect(
+        self, n1: Tuple[Any, ...], n2: Tuple[Any, ...], side_effect: async_side_effect
     ) -> bool:
         if not (len(n1) == self.vertex_size and len(n2) == self.vertex_size):
             return False
@@ -73,7 +53,7 @@ class EdgeMachine:
 
     async def get_linear_side_effects_from_effects_list(
         self, n1: Tuple[Any, ...], n2: Tuple[Any, ...]
-    ) -> Generator[Callable[[Tuple[Any, ...], Tuple[Any, ...]], bool], None, None]:
+    ) -> Generator[linear_side_effect, None, None]:
         for i in self.linear_side_effects_dict:
             if compare_tuples(n1, i[0]) and compare_tuples(n2, i[1]):
                 for v in self.linear_side_effects_dict[i]:
@@ -82,9 +62,7 @@ class EdgeMachine:
     async def get_async_side_effects_from_effects_list(
         self, n1: Tuple[Any, ...], n2: Tuple[Any, ...]
     ) -> Generator[
-        Callable[[Tuple[Any, ...], Tuple[Any, ...]], Coroutine[Any, Any, bool]],
-        None,
-        None,
+        async_side_effect, None, None,
     ]:
         for i in self.async_side_effects_dict:
             if compare_tuples(n1, i[0]) and compare_tuples(n2, i[1]):
@@ -105,3 +83,5 @@ class EdgeMachine:
             await i(self.current_state, new_state)
         for i in self.global_effects:
             i(self.current_state, new_state)
+        for i in self.async_global_side_effects:
+            await i(self.current_state, new_state)

@@ -16,8 +16,8 @@ def t(n1: Tuple[Any, ...], n2: Tuple[Any, ...]) -> bool:
 
 async def main():
     q = EdgeMachine(2, ("Karl", "Otto"))
-    await q.add_side_effect(("Karl", "Otto"), (".*", "Karl"), c)
-    await q.add_global_side_effect(t)
+    await q.add_side_effect(("Karl", "Otto"), (".*", "Karl"), t)
+    await q.add_global_async_side_effect(c)
     await q.change_state(("Otto", "Karl"))
     await q.change_state(("Karl", "Karl"))
     await q.change_state(("Karl", "Otto"))
