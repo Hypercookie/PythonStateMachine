@@ -1,7 +1,7 @@
 import asyncio
 from typing import Tuple, Any
 
-from edge_machine.EdgeMachine import EdgeMachine
+from hyper_machines.edge_machine.EdgeMachine import EdgeMachine
 
 
 async def c(n1: Tuple[Any, ...], n2: Tuple[Any, ...]) -> bool:

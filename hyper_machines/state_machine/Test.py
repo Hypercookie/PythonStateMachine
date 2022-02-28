@@ -1,5 +1,5 @@
 from Node import Node
-from statypy.StateMachine import StateMachine
+from hyper_machines.state_machine.StateMachine import StateMachine
 
 
 def c(n1: Node, n2: Node) -> bool:

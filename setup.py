@@ -1,12 +1,12 @@
 from setuptools import setup
 
 setup(
-    name="statypy",
+    name="hyper_machines",
     version="0.0.1",
-    packages=["statypy"],
+    packages=["hyper_machines"],
     url="",
     license="MIT",
-    author="jannes",
+    author="hypercookie",
     author_email="hypercookie@gmx.de",
-    description="A statypy for Python",
+    description="Machines for Python",
 )
