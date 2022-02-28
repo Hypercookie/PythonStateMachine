@@ -1,2 +1,2 @@
 # Some Finite State / Edge Machines
-[![PyPI version](https://badge.fury.io/py/hyper-machines.svg)](https://badge.fury.io/py/hyper-machines)
+[![PyPI version](https://img.shields.io/pypi/v/hyper-machines?color=green)](https://img.shields.io/pypi/v/hyper-machines?color=green)
